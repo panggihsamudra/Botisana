@@ -1,0 +1,49 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+class Login extends CI_Controller {
+	function __construct(){
+		parent::__construct();
+		$this->load->model('m_login');
+		$this->load->model('m_data');
+	}
+	public function index()
+	{
+		$this->load->view('v_login');
+		if ($this->input->post['submit']) {
+			# code...
+			$this->aksi_login();
+		}
+	}
+	function aksi_login(){
+		$email = $this->input->post('email');
+		$password = $this->input->post('password');
+		$where = array(
+			'email' => $email,
+			'password' => base64_encode($password)
+			);
+		$cek = $this->m_login->cek_login("tb_user",$where)->num_rows();
+		if($cek > 0){
+			$yglogin = $this->db->get_where('tb_user',$where)->row();
+			$data_session = array(
+				'id' => $yglogin->id,
+				'status' => "login",
+				'email' => $yglogin->email,
+				'nama' => $yglogin->nama,
+				'level' =>$yglogin->level
+				);
+			$this->session->set_userdata($data_session);
+			if ($this->session->userdata('level')==='admin') {
+				redirect(base_url('admin'));
+			}
+			if ($this->session->userdata('level')==='user') {
+				echo "user";
+			}
+		}else{
+			echo "email dan password salah !";
+		}
+	}
+	function logout(){
+		$this->session->sess_destroy();
+		redirect(base_url('login'));
+	}
+}
